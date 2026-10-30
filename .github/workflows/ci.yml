@@ -18,6 +18,12 @@ jobs:
         with:
           bundler-cache: true
 
+      - name: Rebuild native gem extensions
+        # The bundler cache can restore gems whose extensions were compiled for another
+        # image. Brakeman then warns that it is ignoring those gems and exits 5, which
+        # looked like a security finding but was a cache artifact.
+        run: bundle pristine
+
       - name: Scan for common Rails security vulnerabilities using static analysis
         run: bin/brakeman --no-pager
 
