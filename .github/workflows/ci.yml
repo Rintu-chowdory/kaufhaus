@@ -13,16 +13,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      # No bundler cache in this job. The restored cache hands Brakeman gems that were
+      # built for a different image, so their extensions are missing; Brakeman warns that
+      # it is ignoring those gems and exits 5, which reads like a security finding.
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
-          bundler-cache: true
-
-      - name: Rebuild native gem extensions
-        # The bundler cache can restore gems whose extensions were compiled for another
-        # image. Brakeman then warns that it is ignoring those gems and exits 5, which
-        # looked like a security finding but was a cache artifact.
-        run: bundle pristine
+          bundler-cache: false
 
       - name: Scan for common Rails security vulnerabilities using static analysis
         run: bin/brakeman --no-pager
