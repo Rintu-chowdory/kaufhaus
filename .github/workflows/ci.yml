@@ -21,6 +21,9 @@ jobs:
         with:
           bundler-cache: false
 
+      - name: Install gems
+        run: bundle install --jobs 4
+
       - name: Scan for common Rails security vulnerabilities using static analysis
         run: bin/brakeman --no-pager
 
