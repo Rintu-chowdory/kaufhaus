@@ -1,25 +1,60 @@
-# README
+# Kaufhaus
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+A small Rails storefront: a product catalogue, a session-backed cart and Devise accounts.
+It started life as a scaffold called "rintu-shop" and is now named after what it is.
 
-Things you may want to cover:
+## Stack
 
-* Ruby version
+- Ruby 3.3.8, Rails 8.1
+- PostgreSQL in production, SQLite-free (the app expects a real `DATABASE_URL`)
+- Propshaft + importmap, Turbo/Stimulus, Devise for auth
+- Solid Cache, Solid Queue and Solid Cable (database-backed, no Redis)
+- Puma behind Thruster when containerised (`Dockerfile` + `bin/docker-entrypoint`)
 
-* System dependencies
+## Local development
 
-* Configuration
+```bash
+bundle install
+bin/rails db:prepare
+bin/rails server
+```
 
-* Database creation
+The app runs at http://localhost:3000. `bin/rails db:seed` loads the demo catalogue.
 
-* Database initialization
+## Deploying to Render
 
-* How to run the test suite
+The service is a **web service** on the native Ruby runtime, region Frankfurt, free plan.
 
-* Services (job queues, cache servers, search engines, etc.)
+| Setting | Value |
+| --- | --- |
+| Build command | `./bin/render-build.sh` |
+| Start command | `bundle exec rails db:migrate && bundle exec puma -C config/puma.rb` |
+| Health check | `/up` |
 
-* Deployment instructions
+Required environment variables:
 
-* ...
- https://rintu.onrender.com 
+| Variable | Why |
+| --- | --- |
+| `DATABASE_URL` | Postgres connection string. The app refuses to boot without it. |
+| `RAILS_MASTER_KEY` | Unlocks `config/credentials.yml.enc` (secret key base, mailer keys). |
+| `RAILS_ENV` | `production` |
+| `WEB_CONCURRENCY` | Puma workers, keep at `1` on the free plan. |
+
+### The database part that bites
+
+Render's free Postgres instances **expire 30 days after creation**, and this app's first
+database did exactly that. When the host disappears, `db:migrate` in the start command
+fails, Puma never boots, and every request returns a 500 while the instance restart-loops.
+Free accounts can only hold one active free database at a time.
+
+So either keep the database outside Render (Supabase, Neon) or expect to recreate it
+monthly and re-seed. Nothing in the app depends on Render specifically.
+
+## Tests
+
+```bash
+bin/rails test
+bin/rails test:system
+```
+
+CI runs RuboCop, Brakeman, bundler-audit and the test suites on every push.

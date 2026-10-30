@@ -5,11 +5,11 @@ default: &default
 
 development:
   <<: *default
-  database: rintu_shop_development
+  database: kaufhaus_development
 
 test:
   <<: *default
-  database: rintu_shop_test
+  database: kaufhaus_test
 
 production:
   primary:
