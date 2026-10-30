@@ -14,3 +14,6 @@ test:
 production:
   primary:
     url: <%= ENV["DATABASE_URL"] %>
+    # Kaufhaus keeps its tables in their own schema rather than adding them to the
+    # database it shares with other projects.
+    schema_search_path: kaufhaus
