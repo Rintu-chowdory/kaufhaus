@@ -28,7 +28,7 @@ The service is a **web service** on the native Ruby runtime, region Frankfurt, f
 | Setting | Value |
 | --- | --- |
 | Build command | `./bin/render-build.sh` |
-| Start command | `bundle exec rails db:migrate && bundle exec puma -C config/puma.rb` |
+| Start command | `./bin/render-start.sh` (creates the schema, migrates, seeds, boots Puma) |
 | Health check | `/up` |
 
 Required environment variables:
@@ -36,9 +36,16 @@ Required environment variables:
 | Variable | Why |
 | --- | --- |
 | `DATABASE_URL` | Postgres connection string. The app refuses to boot without it. |
-| `RAILS_MASTER_KEY` | Unlocks `config/credentials.yml.enc` (secret key base, mailer keys). |
+| `SECRET_KEY_BASE` | Rails secret. The app does not read the encrypted credentials file, so no `RAILS_MASTER_KEY` is needed. |
 | `RAILS_ENV` | `production` |
 | `WEB_CONCURRENCY` | Puma workers, keep at `1` on the free plan. |
+
+### Where the tables live
+
+Production keeps its tables in a dedicated `kaufhaus` schema (`schema_search_path` in
+`config/database.yml`) rather than in the default schema, so it can share a Postgres
+instance with other projects without their tables colliding. `bin/render-start.sh` creates
+the schema on boot; dropping it removes every Kaufhaus table in one statement.
 
 ### The database part that bites
 
